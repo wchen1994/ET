@@ -84,5 +84,44 @@ namespace ET
                 result.Add(new float3(-pos.x, pos.y, pos.z));
             }
         }
+
+        public static void Cast(this PathfindingComponent self, float3 start, float3 end, List<float3> result)
+        {
+            RcVec3f startPos = new(-start.x, start.y, start.z);
+            RcVec3f endPos = new(-end.x, end.y, end.z);
+
+            long startRef;
+            long endRef;
+            RcVec3f startPt;
+            RcVec3f endPt;
+            
+            self.query.FindNearestPoly(startPos, self.extents, self.filter, out startRef, out startPt, out _);
+            self.query.FindNearestPoly(endPos, self.extents, self.filter, out endRef, out endPt, out _);
+            self.query.Raycast(startRef, startPt, endPt, self.filter, 0, 0, out DtRaycastHit rayHit);
+
+            if (rayHit.t != float.MaxValue)
+            {
+                endPt = startPt + (endPt - startPt) * rayHit.t;
+            }
+
+            // In case of partial path, make sure the end point is clamped to the last polygon.
+            RcVec3f epos = RcVec3f.Of(endPt.x, endPt.y, endPt.z);
+            if (self.polys[^1] != endRef)
+            {
+                DtStatus dtStatus = self.query.ClosestPointOnPoly(self.polys[^1], endPt, out RcVec3f closest, out bool _);
+                if (dtStatus.Succeeded())
+                {
+                    epos = closest;
+                }
+            }
+
+            self.query.FindStraightPath(startPt, epos, self.polys, ref self.straightPath, PathfindingComponent.MAX_POLYS, DtNavMeshQuery.DT_STRAIGHTPATH_ALL_CROSSINGS);
+
+            for (int i = 0; i < self.straightPath.Count; ++i)
+            {
+                RcVec3f pos = self.straightPath[i].pos;
+                result.Add(new float3(-pos.x, pos.y, pos.z));
+            }
+        }
     }
 }

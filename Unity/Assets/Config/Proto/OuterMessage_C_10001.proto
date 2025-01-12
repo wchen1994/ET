@@ -233,3 +233,16 @@ message G2C_Benchmark // ISessionResponse
 	int32 Error = 2;
 	string Message = 3;
 }
+
+message C2M_MoveDir // ILocationMessage
+{
+	int32 RpcId = 1;
+	Unity.Mathematics.float3 Direction = 2;
+}
+
+message M2C_MoveDir // IMessage
+{
+	int32 RpcId = 1;
+	Unity.Mathematics.float3 PositionStart = 2;
+	Unity.Mathematics.float3 PositionEnd = 2;
+}

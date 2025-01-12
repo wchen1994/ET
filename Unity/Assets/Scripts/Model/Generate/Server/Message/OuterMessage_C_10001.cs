@@ -1082,6 +1082,68 @@ namespace ET
         }
     }
 
+    [MemoryPackable]
+    [Message(OuterMessage.C2M_MoveDir)]
+    public partial class C2M_MoveDir : MessageObject, ILocationMessage
+    {
+        public static C2M_MoveDir Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(C2M_MoveDir), isFromPool) as C2M_MoveDir;
+        }
+
+        [MemoryPackOrder(0)]
+        public int RpcId { get; set; }
+
+        [MemoryPackOrder(1)]
+        public Unity.Mathematics.float3 Direction { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.RpcId = default;
+            this.Direction = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
+    [MemoryPackable]
+    [Message(OuterMessage.M2C_MoveDir)]
+    public partial class M2C_MoveDir : MessageObject, IMessage
+    {
+        public static M2C_MoveDir Create(bool isFromPool = false)
+        {
+            return ObjectPool.Instance.Fetch(typeof(M2C_MoveDir), isFromPool) as M2C_MoveDir;
+        }
+
+        [MemoryPackOrder(0)]
+        public int RpcId { get; set; }
+
+        [MemoryPackOrder(1)]
+        public Unity.Mathematics.float3 PositionStart { get; set; }
+
+        [MemoryPackOrder(1)]
+        public Unity.Mathematics.float3 PositionEnd { get; set; }
+
+        public override void Dispose()
+        {
+            if (!this.IsFromPool)
+            {
+                return;
+            }
+
+            this.RpcId = default;
+            this.PositionStart = default;
+            this.PositionEnd = default;
+
+            ObjectPool.Instance.Recycle(this);
+        }
+    }
+
     public static class OuterMessage
     {
         public const ushort HttpGetRouterResponse = 10002;
@@ -1118,5 +1180,7 @@ namespace ET
         public const ushort M2C_TransferMap = 10033;
         public const ushort C2G_Benchmark = 10034;
         public const ushort G2C_Benchmark = 10035;
+        public const ushort C2M_MoveDir = 10036;
+        public const ushort M2C_MoveDir = 10037;
     }
 }
