@@ -11,7 +11,7 @@ namespace ET.Server
     {
         protected override async ETTask Run(Unit unit, C2M_MoveDir message)
         {
-			unit.MoveToAsync(message.Direction).Coroutine();
+            unit.MoveDirAsync(message.Direction).Coroutine();
             await ETTask.CompletedTask;
         }
     }

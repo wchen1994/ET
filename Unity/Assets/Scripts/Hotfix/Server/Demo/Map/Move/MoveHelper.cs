@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Unity.Mathematics;
 
 namespace ET.Server
@@ -31,6 +30,7 @@ namespace ET.Server
 
             MoveComponent moveComponent = unit.GetComponent<MoveComponent>();
             
+            Log.Info("FindPathMoveToAsync");
             bool ret = await moveComponent.MoveToAsync(m2CPathfindingResult.Points, speed);
             if (ret) // 如果返回false，说明被其它移动取消了，这时候不需要通知客户端stop
             {
@@ -58,37 +58,51 @@ namespace ET.Server
         #endregion
 
         #region 即时移动
-        public static async ETTask MoveToAsync(this Unit unit, float3 direction)
+        public static async ETTask MoveDirAsync(this Unit unit, float3 direction)
         {
-            Log.Error("TODO MoveToAsync");
+            float speed = unit.GetComponent<NumericComponent>().GetAsFloat(NumericType.Speed);
+            if (speed < 0.01)
+            {
+                unit.SendStop(2);
+                return;
+            }
 
-            //float speed = unit.GetComponent<NumericComponent>().GetAsFloat(NumericType.Speed);
-            //if (speed < 0.01)
-            //{
-            //    unit.SendStop(2);
-            //    return;
-            //}
-
-            //M2C_PathfindingResult m2CPathfindingResult = M2C_PathfindingResult.Create();
-            //unit.GetComponent<PathfindingComponent>().Find(unit.Position, target, m2CPathfindingResult.Points);
-
-            //if (m2CPathfindingResult.Points.Count < 2)
-            //{
-            //    unit.SendStop(3);
-            //    return;
-            //}
-                
-            //// 广播寻路路径
-            //m2CPathfindingResult.Id = unit.Id;
-            //MapMessageHelper.Broadcast(unit, m2CPathfindingResult);
-
-            //MoveComponent moveComponent = unit.GetComponent<MoveComponent>();
+            if (direction.ApproximatelyZero())
+            {
+                unit.GetComponent<MoveComponent>().Stop(false);
+                unit.SendStop(0);
+                return;
+            }
             
-            //bool ret = await moveComponent.MoveToAsync(m2CPathfindingResult.Points, speed);
-            //if (ret) // 如果返回false，说明被其它移动取消了，这时候不需要通知客户端stop
-            //{
-            //    unit.SendStop(0);
-            //}
+            while (true)
+            {
+                float3 endPos = unit.Position + math.normalizesafe(direction) * speed;
+                
+                M2C_PathfindingResult m2CPathfindingResult = M2C_PathfindingResult.Create();
+                unit.GetComponent<PathfindingComponent>().SlideTo(unit.Position, endPos, m2CPathfindingResult.Points);
+
+                if (m2CPathfindingResult.Points.Count < 2)
+                {
+                    unit.Stop(3);
+                    return;
+                }
+
+                // 广播寻路路径
+                m2CPathfindingResult.Id = unit.Id;
+                MapMessageHelper.Broadcast(unit, m2CPathfindingResult);
+
+                MoveComponent moveComponent = unit.GetComponent<MoveComponent>();
+
+                bool ret = await moveComponent.MoveToAsync(m2CPathfindingResult.Points, speed);
+                if (ret) // 如果返回false，说明被其它移动取消了，这时候不需要通知客户端stop
+                {
+                    unit.SendStop(0);
+                }
+                else
+                {
+                    return;
+                }
+            }
         }
         #endregion
     }

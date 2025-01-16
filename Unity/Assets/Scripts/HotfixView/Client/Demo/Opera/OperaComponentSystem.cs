@@ -66,7 +66,6 @@ namespace ET.Client
                 var equal = moveDir == self.MoveDir;
                 if (!equal.x || !equal.y || !equal.z)
                 {
-                    Log.Info("MoveDir Changed");
                     C2M_MoveDir c2MMoveDir = C2M_MoveDir.Create();
                     c2MMoveDir.Direction = moveDir;
                     self.Root().GetComponent<ClientSenderComponent>().Send(c2MMoveDir);

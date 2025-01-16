@@ -33,11 +33,5 @@ namespace ET.Client
             MoveComponent moveComponent = unit.GetComponent<MoveComponent>();
             await moveComponent.MoveToAsync(path, speed);
         }
-
-        public static async ETTask MoveDirAsync(this Unit unit, float3 dir)
-        {
-            Log.Debug("MoveDir");
-            await ETTask.CompletedTask;
-        }
     }
 }
