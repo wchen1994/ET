@@ -26,7 +26,10 @@ namespace ET
             if (!Define.IsEditor)
             {
                 this.dlls = await ResourcesComponent.Instance.LoadAllAssetsAsync<TextAsset>($"Assets/Bundles/Code/Unity.Model.dll.bytes");
-                this.aotDlls = await ResourcesComponent.Instance.LoadAllAssetsAsync<TextAsset>($"Assets/Bundles/AotDlls/mscorlib.dll.bytes");
+                if (Define.EnableIL2CPP)
+                {
+                    this.aotDlls = await ResourcesComponent.Instance.LoadAllAssetsAsync<TextAsset>($"Assets/Bundles/AotDlls/mscorlib.dll.bytes");
+                }
             }
         }
 
@@ -44,6 +47,8 @@ namespace ET
                 //modelViewAssBytes = File.ReadAllBytes(Path.Combine(Define.CodeDir, "Unity.ModelView.dll.bytes"));
                 //modelViewPdbBytes = File.ReadAllBytes(Path.Combine(Define.CodeDir, "Unity.ModelView.pdb.bytes"));
 
+                string backend = Define.EnableIL2CPP ? "IL2CPP-HybridCLR" : "Mono";
+                Log.Info($"RuntimeBackend {backend}");
                 if (Define.EnableIL2CPP)
                 {
                     foreach (var kv in this.aotDlls)
